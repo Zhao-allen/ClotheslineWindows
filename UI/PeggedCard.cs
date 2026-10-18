@@ -614,7 +614,7 @@ internal sealed class PeggedCard : UserControl, IDisposable
     /// The rows, their order and their enabled rules are unchanged from the
     /// original menu. Only the chrome is new: every row is dressed from
     /// <see cref="CardMenuTheme"/>, so the card menu reads as part of the same
-    /// dark system as the tray menu instead of as a stock white WPF menu.
+    /// Linen system as the tray menu instead of as a stock white WPF menu.
     /// </summary>
     internal static ContextMenu BuildContextMenu(PeggedItem item, Line line)
     {
@@ -686,13 +686,16 @@ internal sealed class PeggedCard : UserControl, IDisposable
 }
 
 /// <summary>
-/// The dark chrome for WPF menus, and the one place the card's right-click
+/// The Linen chrome for WPF menus, and the one place the card's right-click
 /// menu gets its look from.
 ///
-/// Colours are read from <see cref="TrayPalette"/> and never restated here.
-/// The tray menu (WinForms) and the card menu (WPF) are one design system;
-/// the tray table is the copy the running tray icon is built from, so it is
-/// the source of truth and this class is only a type adapter on top of it.
+/// Colours are read from <see cref="TrayPalette"/> and never restated here:
+/// the XAML below carries <c>@SLOT@</c> placeholders that the static
+/// constructor fills via <c>TrayPalette.Hex(...)</c>, so the tray menu
+/// (WinForms) and the card menu (WPF) are one design system and cannot
+/// drift apart. The tray table is the copy the running tray icon is built
+/// from, so it is the source of truth and this class is only a type adapter
+/// on top of it.
 /// Nothing can drift, because there is only one set of values.
 ///
 /// (AnnotationWindow.cs still carries its own private copy of the same
@@ -705,11 +708,11 @@ internal sealed class PeggedCard : UserControl, IDisposable
 ///
 /// Metrics, taken from the tray menu so a row reads the same height and
 /// weight wherever it appears:
-///   34px row   10pt (13.33px) Segoe UI Variable Display, 7px above/below
+///   34px row   13.3px Segoe UI Variable, 7px above/below
 ///   12px text inset from the menu edge (4px highlight inset + 8px padding)
-///   4px radius on the hover highlight, 8px on the menu shell
-///   1px #3D3D3D hairline for both the shell border and separators
-///   #8A8A8A for a disabled row, #FF99A4 for a destructive one
+///   6px radius on the hover capsule, 10px on the menu shell
+///   1px #E2D7C7 hairline for both the shell border and separators
+///   #B7AF9F for a disabled row, #A8443A terracotta for a destructive one
 /// </summary>
 public static class CardMenuTheme
 {
@@ -718,14 +721,16 @@ public static class CardMenuTheme
     xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'
     xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'>
 
-  <!-- Shell. 8px radius and a 1px hairline: the Win11 dark silhouette. The
+  <!-- Shell. 10px radius and a 1px hairline: the Linen silhouette. The
        6px transparent ring is there so the drop shadow has room to draw
-       instead of being clipped at the popup edge. -->
+       instead of being clipped at the popup edge. The shadow is a soft
+       warm wash, not a dark silhouette: separation comes from whitespace
+       and the hairline. -->
   <Style x:Key='CardMenu' TargetType='ContextMenu'>
-    <Setter Property='Background' Value='#2B2B2B'/>
-    <Setter Property='Foreground' Value='#FFFFFF'/>
-    <Setter Property='FontFamily' Value='Segoe UI Variable Display, Segoe UI'/>
-    <Setter Property='FontSize' Value='13.33'/>
+    <Setter Property='Background' Value='@BG_PANEL@'/>
+    <Setter Property='Foreground' Value='@FG_PRIMARY@'/>
+    <Setter Property='FontFamily' Value='Segoe UI Variable, Segoe UI'/>
+    <Setter Property='FontSize' Value='13.3'/>
     <Setter Property='SnapsToDevicePixels' Value='True'/>
     <Setter Property='UseLayoutRounding' Value='True'/>
     <Setter Property='HasDropShadow' Value='True'/>
@@ -733,13 +738,13 @@ public static class CardMenuTheme
       <Setter.Value>
         <ControlTemplate TargetType='ContextMenu'>
           <Border Margin='6' Padding='0,5,0,5'
-                  Background='#2B2B2B'
-                  BorderBrush='#3D3D3D'
+                  Background='@BG_PANEL@'
+                  BorderBrush='@STROKE@'
                   BorderThickness='1'
-                  CornerRadius='8'
+                  CornerRadius='10'
                   SnapsToDevicePixels='True'>
             <Border.Effect>
-              <DropShadowEffect Color='#000000' Opacity='0.45' BlurRadius='14'
+              <DropShadowEffect Color='@MENU_SHADOW@' Opacity='0.28' BlurRadius='12'
                                 ShadowDepth='3' Direction='270'/>
             </Border.Effect>
             <ItemsPresenter/>
@@ -749,12 +754,13 @@ public static class CardMenuTheme
     </Setter>
   </Style>
 
-  <!-- Row. 13.33px text plus 7px above and below lands on the tray menu's
-       34px row, and MinHeight keeps the click target above 32px. -->
+  <!-- Row. 13.3px text plus 7px above and below lands on the tray menu's
+       34px row, and MinHeight keeps the click target on it. The hover
+       highlight is a 6px warm capsule, not a dark fill. -->
   <Style x:Key='CardRow' TargetType='MenuItem'>
-    <Setter Property='Foreground' Value='#FFFFFF'/>
-    <Setter Property='FontFamily' Value='Segoe UI Variable Display, Segoe UI'/>
-    <Setter Property='FontSize' Value='13.33'/>
+    <Setter Property='Foreground' Value='@FG_PRIMARY@'/>
+    <Setter Property='FontFamily' Value='Segoe UI Variable, Segoe UI'/>
+    <Setter Property='FontSize' Value='13.3'/>
     <Setter Property='SnapsToDevicePixels' Value='True'/>
     <Setter Property='Template'>
       <Setter.Value>
@@ -762,8 +768,8 @@ public static class CardMenuTheme
           <Border x:Name='Bd'
                   Margin='4,1,4,1'
                   Padding='8,7,8,7'
-                  MinHeight='32'
-                  CornerRadius='4'
+                  MinHeight='34'
+                  CornerRadius='6'
                   Background='Transparent'
                   SnapsToDevicePixels='True'
                   TextElement.Foreground='{TemplateBinding Foreground}'>
@@ -774,10 +780,10 @@ public static class CardMenuTheme
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property='IsHighlighted' Value='True'>
-              <Setter TargetName='Bd' Property='Background' Value='#3C3C3C'/>
+              <Setter TargetName='Bd' Property='Background' Value='@BG_HOVER@'/>
             </Trigger>
             <Trigger Property='IsEnabled' Value='False'>
-              <Setter Property='Foreground' Value='#8A8A8A'/>
+              <Setter Property='Foreground' Value='@DISABLED@'/>
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -785,20 +791,21 @@ public static class CardMenuTheme
     </Setter>
   </Style>
 
-  <!-- Destructive row: identical metrics, danger ink. A trigger in the base
-       template still wins over this setter, so a disabled danger row greys
-       out instead of staying pink. -->
+  <!-- Destructive row: identical metrics, terracotta ink. A trigger in the
+       base template still wins over this setter, so a disabled danger row
+       greys out instead of staying terracotta. -->
   <Style x:Key='CardRowDanger' TargetType='MenuItem' BasedOn='{StaticResource CardRow}'>
-    <Setter Property='Foreground' Value='#FF99A4'/>
+    <Setter Property='Foreground' Value='@DANGER@'/>
   </Style>
 
-  <!-- Separator. 8px side inset, the same as the tray menu's. -->
+  <!-- Separator. 8px side inset, the same as the tray menu's: a 1px
+       linen hairline. -->
   <Style x:Key='CardSeparator' TargetType='Separator'>
     <Setter Property='Template'>
       <Setter.Value>
         <ControlTemplate TargetType='Separator'>
           <Border Height='1' Margin='8,4,8,4'
-                  Background='#3D3D3D'
+                  Background='@STROKE@'
                   SnapsToDevicePixels='True'/>
         </ControlTemplate>
       </Setter.Value>
@@ -808,7 +815,17 @@ public static class CardMenuTheme
 
     static CardMenuTheme()
     {
-        var dict = (ResourceDictionary)XamlReader.Parse(Xaml);
+        // Fill the @SLOT@ placeholders from the single source of truth.
+        // Hex() drops the alpha channel: every slot here is opaque.
+        var xaml = Xaml
+            .Replace("@BG_PANEL@", TrayPalette.Hex(TrayPalette.BgPanel))
+            .Replace("@FG_PRIMARY@", TrayPalette.Hex(TrayPalette.FgPrimary))
+            .Replace("@STROKE@", TrayPalette.Hex(TrayPalette.Stroke))
+            .Replace("@BG_HOVER@", TrayPalette.Hex(TrayPalette.BgHover))
+            .Replace("@DISABLED@", TrayPalette.Hex(TrayPalette.Disabled))
+            .Replace("@DANGER@", TrayPalette.Hex(TrayPalette.Danger))
+            .Replace("@MENU_SHADOW@", TrayPalette.Hex(TrayPalette.MenuShadow));
+        var dict = (ResourceDictionary)XamlReader.Parse(xaml);
         MenuStyle = (Style)dict["CardMenu"];
         MenuItemStyle = (Style)dict["CardRow"];
         DangerItemStyle = (Style)dict["CardRowDanger"];
