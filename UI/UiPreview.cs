@@ -213,7 +213,7 @@ internal static class UiPreview
         {
             using (var g = Graphics.FromImage(canvas))
             {
-                g.Clear(System.Drawing.Color.FromArgb(0x17, 0x17, 0x17));
+                g.Clear(TrayPalette.BgPage);
                 g.DrawImage(rootBmp, 0, 0);
                 g.DrawImage(subBmp, ox, oy);
             }
@@ -285,7 +285,7 @@ internal static class UiPreview
     /// </summary>
     private static (int first, int text) InkColumns(Bitmap bmp, Rectangle row)
     {
-        var bg = System.Drawing.Color.FromArgb(0x2B, 0x2B, 0x2B);
+        var bg = TrayPalette.BgCard;
 
         bool Ink(int x)
         {
@@ -489,9 +489,9 @@ internal static class UiPreview
             using var canvas = new Bitmap(canvasW, canvasH);
             using (var cg = Graphics.FromImage(canvas))
             {
-                cg.Clear(System.Drawing.Color.FromArgb(0x17, 0x17, 0x17));
+                cg.Clear(TrayPalette.BgPage);
                 using var labelFont = new System.Drawing.Font("Segoe UI", 8f);
-                using var labelBrush = new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(0xB0, 0xB0, 0xB0));
+                using var labelBrush = new System.Drawing.SolidBrush(TrayPalette.FgMuted);
 
                 int y = pad;
                 foreach (var (label, culture, watching, count) in rows)
@@ -517,7 +517,7 @@ internal static class UiPreview
                         int subBottom = 34 + subFont.Height;
                         int divider = stripH - 1;
                         var ink = InkRows(bmp, new Rectangle(layout.TextX, 30, layout.TextWidth, 22),
-                                          System.Drawing.Color.FromArgb(0x2B, 0x2B, 0x2B));
+                                          TrayPalette.BgCard);
 
                         log.AppendLine(
                             $"{label,-8} dpi={sg.DpiX:0} titleY=14..{14 + titleFont.Height} " +
@@ -677,12 +677,12 @@ internal static class UiPreview
         {
             using (var g = Graphics.FromImage(canvas))
             {
-                g.Clear(System.Drawing.Color.FromArgb(0x2B, 0x2B, 0x2B));
+                g.Clear(TrayPalette.BgPage);
                 g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
                 g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.Half;
                 g.DrawImage(rendered, pad, pad, rendered.Width * scale, rendered.Height * scale);
                 using var font = new System.Drawing.Font("Segoe UI", 9f);
-                using var brush = new System.Drawing.SolidBrush(System.Drawing.Color.White);
+                using var brush = new System.Drawing.SolidBrush(TrayPalette.FgMuted);
                 g.DrawString($"tray icon via MakeTShirtIcon, {scale}x", font, brush, pad, pad + rendered.Height * scale + 2);
             }
             canvas.Save(outputPath, ImageFormat.Png);

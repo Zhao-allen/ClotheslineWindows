@@ -51,22 +51,22 @@ namespace Clothesline.UI;
 /// </summary>
 internal sealed class AnnotationWindow : Window
 {
-    // ── Win11 dark palette, matching the tray menu ──
-    private static readonly Brush BgWindow   = Frozen(Color.FromRgb(0x20, 0x20, 0x20));
-    private static readonly Brush BgCard     = Frozen(Color.FromRgb(0x2B, 0x2B, 0x2B));
-    private static readonly Brush BgCanvas   = Frozen(Color.FromRgb(0x14, 0x14, 0x14));
-    private static readonly Brush BgHover    = Frozen(Color.FromRgb(0x3C, 0x3C, 0x3C));
-    private static readonly Brush BgPressed  = Frozen(Color.FromRgb(0x45, 0x45, 0x45));
-    private static readonly Brush BgElevated = Frozen(Color.FromRgb(0x34, 0x34, 0x34));
-    private static readonly Brush StrokeLine = Frozen(Color.FromRgb(0x3D, 0x3D, 0x3D));
-    private static readonly Brush StrokeLine2 = Frozen(Color.FromRgb(0x4A, 0x4A, 0x4A));
-    private static readonly Brush FgPrimary  = Frozen(Colors.White);
-    private static readonly Brush FgSecond   = Frozen(Color.FromRgb(0xC8, 0xC8, 0xC8));
-    private static readonly Brush FgMuted    = Frozen(Color.FromRgb(0x8A, 0x8A, 0x8A));
-    private static readonly Brush Accent     = Frozen(Color.FromRgb(0x4C, 0xC2, 0xFF));
-    private static readonly Brush AccentSoft = Frozen(Color.FromArgb(0x30, 0x4C, 0xC2, 0xFF));
-    private static readonly Brush AccentRing = Frozen(Color.FromArgb(0x73, 0x4C, 0xC2, 0xFF));
-    private static readonly Brush AccentInk  = Frozen(Color.FromRgb(0x0B, 0x2A, 0x3D));
+    // ── Linen palette, read from TrayPalette (the app's single source of truth) ──
+    private static readonly Brush BgWindow   = Frozen(TrayPalette.ToWpf(TrayPalette.BgCard));
+    private static readonly Brush BgCanvas   = Frozen(TrayPalette.ToWpf(TrayPalette.BgCanvas));
+    private static readonly Brush BgHover    = Frozen(TrayPalette.ToWpf(TrayPalette.BgHover));
+    private static readonly Brush BgElevated = Frozen(TrayPalette.ToWpf(TrayPalette.BgElevated));
+    private static readonly Brush StrokeLine = Frozen(TrayPalette.ToWpf(TrayPalette.Stroke));
+    private static readonly Brush StrokeLine2 = Frozen(TrayPalette.ToWpf(TrayPalette.StrokeStrong));
+    private static readonly Brush FgPrimary  = Frozen(TrayPalette.ToWpf(TrayPalette.FgPrimary));
+    private static readonly Brush FgSecond   = Frozen(TrayPalette.ToWpf(TrayPalette.FgSecondary));
+    private static readonly Brush FgMuted    = Frozen(TrayPalette.ToWpf(TrayPalette.FgMuted));
+    private static readonly Brush Accent     = Frozen(TrayPalette.ToWpf(TrayPalette.Accent));
+    private static readonly Brush AccentSoft = Frozen(TrayPalette.ToWpf(TrayPalette.AccentSoft));
+    private static readonly Brush AccentRing = Frozen(TrayPalette.ToWpf(TrayPalette.AccentRing));
+    private static readonly Brush AccentInk  = Frozen(TrayPalette.ToWpf(TrayPalette.AccentInk));
+    private static readonly Brush DangerHover = Frozen(TrayPalette.ToWpf(TrayPalette.DangerHover));
+    private static readonly Brush DangerInk   = Frozen(TrayPalette.ToWpf(TrayPalette.DangerInk));
 
     private static Brush Frozen(Color c)
     {
@@ -193,8 +193,8 @@ internal sealed class AnnotationWindow : Window
         UseLayoutRounding = true;
         TextOptions.SetTextFormattingMode(this, TextFormattingMode.Display);
 
-        // Custom chrome: the default ToolWindow title bar is a light grey
-        // strip that fights the dark canvas.
+        // Custom chrome: the default ToolWindow title bar is a system strip
+        // that fights the Linen surface, so the editor draws its own.
         WindowChrome.SetWindowChrome(this, new WindowChrome
         {
             CaptionHeight = 42,
@@ -205,7 +205,7 @@ internal sealed class AnnotationWindow : Window
         });
 
         // Loading placeholder so the user sees something immediately.
-        Content = new Grid { Background = BgCanvas };
+        Content = new Grid { Background = BgWindow };
 
         Loaded += OnLoaded;
     }
@@ -333,7 +333,7 @@ internal sealed class AnnotationWindow : Window
         var bar = new Grid
         {
             Height = 42,
-            Background = BgCard
+            Background = BgWindow
         };
         bar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         bar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -427,8 +427,10 @@ internal sealed class AnnotationWindow : Window
         WindowChrome.SetIsHitTestVisibleInChrome(btn, true);
         btn.MouseEnter += (_, _) =>
         {
-            btn.Background = isClose ? Frozen(Color.FromRgb(0xC4, 0x2B, 0x1C)) : BgHover;
-            text.Foreground = FgPrimary;
+            // The close button takes the system red, so its glyph flips to
+            // the on-danger ink: dark primary ink on #C42B1C is unreadable.
+            btn.Background = isClose ? DangerHover : BgHover;
+            text.Foreground = isClose ? DangerInk : FgPrimary;
         };
         btn.MouseLeave += (_, _) =>
         {
@@ -456,7 +458,7 @@ internal sealed class AnnotationWindow : Window
         {
             Orientation = WpfOrientation.Horizontal,
             Height = 58,
-            Background = BgCard
+            Background = BgWindow
         };
 
         AddToolGroup(bar, new[]
@@ -499,7 +501,7 @@ internal sealed class AnnotationWindow : Window
         bar.Children.Add(Separator());
 
         // Stroke width presets. A system combo box was the previous approach
-        // and it drops a light-themed popup over the dark UI.
+        // and its popup chrome fights the Linen toolbar.
         var widths = new StackPanel
         {
             Orientation = WpfOrientation.Horizontal,
@@ -529,7 +531,7 @@ internal sealed class AnnotationWindow : Window
         // Actions. A StackPanel left-packs its children, so the groups above
         // go in one, and the buttons go in a second one layered on top that
         // stretches and right-aligns them.
-        var host = new Grid { Height = 58, Background = BgCard };
+        var host = new Grid { Height = 58, Background = BgWindow };
         host.Children.Add(bar);
         var right = new StackPanel
         {
@@ -730,7 +732,11 @@ internal sealed class AnnotationWindow : Window
             Width = 22,
             Height = 22,
             CornerRadius = new CornerRadius(11),
-            Background = new SolidColorBrush(color)
+            Background = new SolidColorBrush(color),
+            // A hairline keeps the white / near-white ink swatches legible
+            // against the light toolbar instead of vanishing into it.
+            BorderBrush = StrokeLine,
+            BorderThickness = new Thickness(1)
         };
 
         var root = new Border
@@ -922,7 +928,7 @@ internal sealed class AnnotationWindow : Window
 
     private UIElement BuildStatusBar()
     {
-        var grid = new Grid { Height = 34, Background = BgCard };
+        var grid = new Grid { Height = 34, Background = BgWindow };
 
         var left = new StackPanel
         {

@@ -7,8 +7,10 @@ namespace ClotheslineSetup;
 /// The installer's single window. Built rather than designed in the editor
 /// because it ships as one self-contained exe with no satellite XAML.
 ///
-/// The palette is the same one the application uses (see TrayPalette), so the
-/// installer and the thing it installs read as one product.
+/// The palette mirrors the application's Clothesline.UI.TrayPalette (Linen, a
+/// single light theme), so the installer and the thing it installs read as one
+/// product. This installer is a separate project and cannot reference that
+/// table, so it keeps its own copy of the values.
 ///
 /// Layout is positioned by hand rather than through FlowLayoutPanel: a flow
 /// panel inside a percent-sized table cell scrolls instead of reflowing, which
@@ -16,14 +18,13 @@ namespace ClotheslineSetup;
 /// </summary>
 internal sealed class MainForm : Form
 {
-    private static readonly Color BgWindow = Color.FromArgb(0x1E, 0x1E, 0x1E);
-    private static readonly Color BgCard = Color.FromArgb(0x2B, 0x2B, 0x2B);
-    private static readonly Color BgField = Color.FromArgb(0x33, 0x33, 0x33);
-    private static readonly Color FgPrimary = Color.White;
-    private static readonly Color FgSecondary = Color.FromArgb(0xB4, 0xB4, 0xB4);
-    private static readonly Color FgMuted = Color.FromArgb(0x8A, 0x8A, 0x8A);
-    private static readonly Color Accent = Color.FromArgb(0x4C, 0xC2, 0xFF);
-    private static readonly Color Stroke = Color.FromArgb(0x3D, 0x3D, 0x3D);
+    // Colour mirrors Clothesline.UI.TrayPalette (Linen, single light theme).
+    private static readonly Color BgWindow = Color.FromArgb(0xFF, 0xFF, 0xFF);
+    private static readonly Color BgField = Color.FromArgb(0xF1, 0xEA, 0xDE);
+    private static readonly Color FgPrimary = Color.FromArgb(0x2B, 0x25, 0x20);
+    private static readonly Color FgSecondary = Color.FromArgb(0x6A, 0x60, 0x55);
+    private static readonly Color FgMuted = Color.FromArgb(0x9C, 0x91, 0x82);
+    private static readonly Color Stroke = Color.FromArgb(0xE2, 0xD7, 0xC7);
 
     private const int Side = 40;
     private const int HeaderH = 96;

@@ -32,27 +32,80 @@ using WTranslate = System.Windows.Media.TranslateTransform;
 namespace Clothesline.UI;
 
 /// <summary>
-/// The Win11 dark palette shared by the tray menu and its custom-painted
-/// parts (header strip, thumbnail strip, toggle switches).
+/// The Linen palette - the app's single source of truth for colour.
 ///
-/// This is the app's single source of truth for the dark theme. WPF surfaces
-/// do not restate these values: <see cref="CardMenuTheme"/> reads them and
-/// adapts them to WPF brushes, so the tray menu and the card's right-click
-/// menu cannot drift apart. Add a colour here, not in a UI file.
+/// One theme only: warm neutrals (linen #EFE8DC, surface #FFFFFF) with a
+/// single amber accent, the clothesline metaphor rendered as rope, wooden
+/// pegs, linen and sun. There is deliberately no dark variant and no theme
+/// switch; every surface is light.
+///
+/// WPF surfaces do not restate these values: <c>AnnotationWindow</c> and the
+/// WinForms menus read them through <see cref="ToWpf"/> where a brush/colour is
+/// wanted, and <see cref="CardMenuTheme"/> fills its XAML template through
+/// <see cref="Hex"/>, so the tray menu, the card menu and the annotation editor
+/// cannot drift apart. Add a colour here, not in a UI file. (The installer is a
+/// separate project and cannot reference this table; it carries the one
+/// remaining copy, and a comment there points back here.)
 /// </summary>
 internal static class TrayPalette
 {
-    public static readonly GColor BgCard      = GColor.FromArgb(43, 43, 43);    // #2B2B2B
-    public static readonly GColor BgHover     = GColor.FromArgb(60, 60, 60);
-    public static readonly GColor BgElevated  = GColor.FromArgb(52, 52, 52);
-    public static readonly GColor FgPrimary   = GColor.FromArgb(255, 255, 255);
-    public static readonly GColor FgSecondary = GColor.FromArgb(200, 200, 200);
-    public static readonly GColor FgMuted     = GColor.FromArgb(138, 138, 138);
-    public static readonly GColor Accent      = GColor.FromArgb(76, 194, 255);  // #4CC2FF
-    public static readonly GColor AccentSoft  = GColor.FromArgb(40, 76, 194, 255);
-    public static readonly GColor Stroke      = GColor.FromArgb(61, 61, 61);    // #3D3D3D
-    public static readonly GColor Danger      = GColor.FromArgb(255, 153, 164);
-    public static readonly GColor KnobDark    = GColor.FromArgb(11, 42, 61);
+    // ── Surfaces ───────────────────────────────────────────────────────────
+    public static readonly GColor BgPage     = GColor.FromArgb(0xEF, 0xE8, 0xDC); // 亚麻米
+    public static readonly GColor BgCard     = GColor.FromArgb(0xFF, 0xFF, 0xFF); // 菜单 / 窗口表面
+    public static readonly GColor BgPanel    = GColor.FromArgb(0xF7, 0xF1, 0xE7); // 次级面板
+    public static readonly GColor BgElevated = GColor.FromArgb(0xF1, 0xEA, 0xDE); // 控件 / 输入底
+    public static readonly GColor BgHover    = GColor.FromArgb(0xED, 0xE4, 0xD6);
+    public static readonly GColor BgPressed  = GColor.FromArgb(0xE2, 0xD7, 0xC7);
+    public static readonly GColor BgCanvas   = GColor.FromArgb(0xDE, 0xD4, 0xC4); // 截屏背后的暖灰
+
+    // ── Lines ──────────────────────────────────────────────────────────────
+    public static readonly GColor Stroke       = GColor.FromArgb(0xE2, 0xD7, 0xC7); // 1px 描边
+    public static readonly GColor StrokeStrong = GColor.FromArgb(0xD9, 0xCD, 0xBB); // 更重的发丝线 / 分隔
+    public static readonly GColor AccentRing   = GColor.FromArgb(0x73, 0xE9, 0xA2, 0x3B);
+
+    // ── Ink ────────────────────────────────────────────────────────────────
+    public static readonly GColor FgPrimary   = GColor.FromArgb(0x2B, 0x25, 0x20);
+    public static readonly GColor FgSecondary = GColor.FromArgb(0x6A, 0x60, 0x55);
+    public static readonly GColor FgMuted     = GColor.FromArgb(0x9C, 0x91, 0x82);
+    public static readonly GColor FgDisabled  = GColor.FromArgb(0xB7, 0xAF, 0x9F);
+
+    // ── Accent: the one colour that means "current / primary" ──────────────
+    public static readonly GColor Accent     = GColor.FromArgb(0xE9, 0xA2, 0x3B); // 琥珀填充
+    public static readonly GColor AccentInk  = GColor.FromArgb(0x2A, 0x1B, 0x0C); // 填充上的文字
+    public static readonly GColor AccentText = GColor.FromArgb(0x9E, 0x5B, 0x0C); // 表面上的强调文字
+    public static readonly GColor AccentSoft = GColor.FromArgb(0x33, 0xE9, 0xA2, 0x3B);
+
+    // ── Semantic ───────────────────────────────────────────────────────────
+    public static readonly GColor Danger = GColor.FromArgb(0xA8, 0x44, 0x3A); // 陶土红：破坏性行
+    public static readonly GColor DangerHover = GColor.FromArgb(0xC4, 0x2B, 0x1C); // 系统红：窗口关闭悬停
+    public static readonly GColor DangerInk   = GColor.FromArgb(0xFF, 0xFF, 0xFF); // 危险填充上的文字
+    public static readonly GColor Ok     = GColor.FromArgb(0x3E, 0x7A, 0x4E); // 橄榄绿
+    public static readonly GColor Rope   = GColor.FromArgb(0x9C, 0x7A, 0x46);
+    public static readonly GColor Peg    = GColor.FromArgb(0xC2, 0x9A, 0x64);
+
+    /// <summary>
+    /// The knob of an on-state switch. Same value as <see cref="AccentInk"/>,
+    /// kept under its own name because the painted toggle reads it directly.
+    /// </summary>
+    public static readonly GColor KnobDark = AccentInk;
+
+    /// <summary>Radius of the hover highlight pill, in DIP. Shared so both menu stacks match.</summary>
+    public const double RowRadius = 7;
+
+    /// <summary>The row the menus aim for, in DIP.</summary>
+    public const int RowHeight = 36;
+
+    /// <summary>Minimum comfortable click target, in DIP.</summary>
+    public const int ClickFloor = 32;
+
+    /// <summary>
+    /// The same value as a WPF <see cref="WColor"/>, so the WPF surfaces can
+    /// read this table instead of restating the numbers.
+    /// </summary>
+    public static WColor ToWpf(GColor c) => WColor.FromArgb(c.A, c.R, c.G, c.B);
+
+    /// <summary><c>#RRGGBB</c>, for building XAML templates from this table.</summary>
+    public static string Hex(GColor c) => $"#{c.R:X2}{c.G:X2}{c.B:X2}";
 }
 
 /// <summary>
@@ -564,11 +617,10 @@ internal sealed class TrayIcon : IDisposable
     private static void SetValue(ValueRow item, string value) => item.SetValue(value);
 
     /// <summary>
-    /// Win11-style row metrics: 6px vertical padding, no horizontal padding.
-    /// With the 10pt font that lands on a 34px row - tight enough to read as
-    /// compact, and still above the 32px floor Win11 uses for a comfortable
-    /// click target. The same helper runs for sub-menu rows, so both levels
-    /// are the same height.
+    /// Linen row metrics: 7px vertical padding, no horizontal padding. With
+    /// the 10pt font that lands on a 36px row - looser than the old 34px, and
+    /// well above the 32px floor for a comfortable click target. The same
+    /// helper runs for sub-menu rows, so both levels are the same height.
     ///
     /// The horizontal inset is deliberately left at zero. A drop-down sizes
     /// itself to the *content* width of its widest row and does not add the
@@ -582,7 +634,7 @@ internal sealed class TrayIcon : IDisposable
         // Set the font on every row: sub-menu rows live in their own
         // auto-created ContextMenuStrip whose font does not always inherit.
         item.Font = new GFont("Segoe UI Variable Display", 10f, GUnit.Point);
-        item.Padding = new Padding(0, 6, 0, 6);
+        item.Padding = new Padding(0, 7, 0, 7);
         item.Margin = new Padding(0);
         item.TextAlign = GAlign.MiddleLeft;
     }
@@ -1141,9 +1193,9 @@ internal sealed class MenuThumbnailStrip : System.Windows.Forms.Control
 }
 
 /// <summary>
-/// Windows 11 dark theme palette. Hover is a subtle gray pill, the border is
-/// the same 1px hairline the WPF card menu draws, and selection uses the app
-/// accent (#4CC2FF).
+/// WinForms colour table, read straight from <see cref="TrayPalette"/>. Hover is
+/// the warm linen pill, the border is the same 1px hairline the WPF card menu
+/// draws, and selection uses the app's one amber accent.
 /// </summary>
 internal sealed class TrayColorTable : ProfessionalColorTable
 {
@@ -1151,9 +1203,8 @@ internal sealed class TrayColorTable : ProfessionalColorTable
     public override GColor MenuItemSelectedGradientBegin => TrayPalette.BgHover;
     public override GColor MenuItemSelectedGradientEnd => TrayPalette.BgHover;
     public override GColor MenuItemBorder => TrayPalette.Accent;
-    // Was #141414, which is invisible against a dark desktop and left the
-    // drop-down looking unbordered. The card menu's shell draws #3D3D3D, so
-    // both menus now have the same visible edge.
+    // The hairline from the palette, so the tray drop-down and the WPF card
+    // menu draw the same visible edge on the light desktop.
     public override GColor MenuBorder => TrayPalette.Stroke;
     public override GColor ToolStripDropDownBackground => TrayPalette.BgCard;
     public override GColor ImageMarginGradientBegin => TrayPalette.BgCard;
