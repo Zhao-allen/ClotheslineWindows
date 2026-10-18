@@ -23,47 +23,23 @@ body{
   transition:background .25s ease,color .25s ease;
 }
 
-/* ---------- tokens: 深色（默认） ---------- */
+/* ---------- tokens: 浅色（唯一主题 · 暖色 + 琥珀） ---------- */
 body{
-  --page:#100E0C;
-  --panel:#1B1815;
-  --panel-2:#221E19;
-  --surface:#26221D;      /* 菜单/浮层底 */
-  --elevated:#322C25;     /* 次级块/控件底 */
-  --hover:#3B342B;        /* 悬停高亮 */
-  --stroke:#453C31;       /* 1px 描边 */
-  --stroke-soft:#2A251F;  /* 分区块分隔 */
-  --text:#F6F0E7;
-  --text-2:#C6B9A7;
-  --text-3:#8C8172;
-  --accent:#E9A23B;
-  --accent-ink:#2A1B0C;
-  --accent-text:#F2B355;
-  --accent-soft:rgba(233,162,59,.16);
-  --rope:#B9905C;
-  --peg:#D6B488;
-  --danger:#E88C7D;
-  --ok:#8FBF7F;
-  --shadow:0 16px 40px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.4);
-  --stage:radial-gradient(120% 130% at 28% -10%, #2C2720 0%, #17140F 62%, #0D0B09 100%);
-}
-/* ---------- tokens: 浅色 ---------- */
-body.theme-light{
-  --page:#EFE8DC;
+  --page:#EFE8DC;          /* 文档底 / 亚麻米 */
   --panel:#FFFFFF;
   --panel-2:#F7F1E7;
-  --surface:#FFFFFF;
-  --elevated:#F0E9DD;
-  --hover:#EDE4D6;
-  --stroke:#E2D7C7;
-  --stroke-soft:#E7DFD1;
+  --surface:#FFFFFF;       /* 菜单 / 浮层底 */
+  --elevated:#F1EADE;      /* 次级块 / 控件底 */
+  --hover:#EDE4D6;         /* 悬停高亮 */
+  --stroke:#E2D7C7;        /* 1px 描边 */
+  --stroke-soft:#E7DFD1;   /* 分区块分隔 */
   --text:#2B2520;
   --text-2:#6A6055;
   --text-3:#9C9182;
-  --accent:#A9600F;
-  --accent-ink:#FFFFFF;
-  --accent-text:#96560C;
-  --accent-soft:rgba(191,116,24,.13);
+  --accent:#E9A23B;        /* 琥珀：填充 / 开关 / 主按钮 */
+  --accent-ink:#2A1B0C;    /* 琥珀填充上的文字 */
+  --accent-text:#9E5B0C;   /* 表面上的强调文字（保证对比度） */
+  --accent-soft:rgba(233,162,59,.20);
   --rope:#9C7A46;
   --peg:#C29A64;
   --danger:#A8443A;
@@ -114,15 +90,10 @@ a{color:var(--accent-text)}
 .bar nav a{color:var(--text-2);text-decoration:none;padding:6px 11px;border-radius:7px}
 .bar nav a:hover{background:var(--hover);color:var(--text)}
 .bar .brand{margin-left:auto;font-weight:700;white-space:nowrap;font-size:14px}
-.themebtn{
-  display:flex;gap:2px;background:var(--panel);border:1px solid var(--stroke);
-  border-radius:9px;padding:3px;margin-left:20px
+.bar .themechip{
+  margin-left:20px;font-size:12px;font-weight:600;color:var(--accent-text);
+  background:var(--accent-soft);border-radius:999px;padding:5px 13px;white-space:nowrap
 }
-.themebtn button{
-  font:inherit;font-size:12.5px;font-weight:600;color:var(--text-2);
-  background:transparent;border:0;border-radius:6px;padding:5px 12px;cursor:pointer
-}
-.themebtn button.on{background:var(--accent-soft);color:var(--accent-text)}
 
 /* ---------- generic blocks ---------- */
 .grid{display:grid;gap:20px}
@@ -145,6 +116,10 @@ ul.clean li::before{content:"";position:absolute;left:6px;top:9px;width:6px;heig
 .pair{display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap;justify-content:center}
 .pair > *,.stage > *{min-width:0;max-width:100%}
 .cap{font-size:12px;color:var(--text-3);text-align:center;margin-top:12px;letter-spacing:.04em}
+.sw-dot{
+  width:30px;height:30px;border-radius:8px;display:block;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.10)
+}
 
 /* ---------- notes ---------- */
 .notes{max-width:400px;flex:1 1 320px}
@@ -310,8 +285,7 @@ svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
 .btn.ghost{color:var(--text-2)}
 .ed__actions{margin-left:auto;display:flex;gap:8px;padding-right:6px}
-.ed__canvas{background:#141210;display:flex;align-items:center;justify-content:center;padding:26px}
-body.theme-light .ed__canvas{background:#DED4C4}
+.ed__canvas{background:#DED4C4;display:flex;align-items:center;justify-content:center;padding:26px}
 /* 假截图 */
 .mock{
   width:640px;max-width:100%;background:#FBFBFD;border-radius:8px;overflow:hidden;
@@ -442,12 +416,12 @@ footer{padding:40px 0 64px;color:var(--text-3);font-size:12.5px;border-top:1px s
     <p class="lead">
       把「晾衣绳」的意象——绳索、木夹、亚麻布、暖阳——翻译成界面的颜色、材质与形态。
       覆盖托盘菜单、卡片右键菜单、标注编辑器、安装器与托盘图标；
-      <strong>不含主界面「晾衣绳」本身</strong>。给出深/浅双主题。
+      <strong>不含主界面「晾衣绳」本身</strong>。整体采用<strong>单一浅色主题</strong>（暖色底 + 琥珀强调）。
     </p>
     <div class="chips">
       <span class="chip accent">全新品牌视觉</span>
       <span class="chip">温暖生活化</span>
-      <span class="chip">深色 + 浅色双主题</span>
+      <span class="chip accent">单一浅色主题</span>
       <span class="chip">5 个界面</span>
       <span class="chip">沿用 Segoe UI Variable</span>
       <span class="chip">单一强调色 · 克制使用</span>
@@ -469,10 +443,7 @@ footer{padding:40px 0 64px;color:var(--text-3);font-size:12.5px;border-top:1px s
       <a href="#changes">改动与待确认</a>
     </nav>
     <span class="brand">Clothesline · Linen</span>
-    <div class="themebtn">
-      <button id="btnDark" class="on" onclick="setTheme('dark')">深色</button>
-      <button id="btnLight" onclick="setTheme('light')">浅色</button>
-    </div>
+    <span class="themechip">单一浅色主题</span>
   </div>
 </div>
 
@@ -491,11 +462,11 @@ footer{padding:40px 0 64px;color:var(--text-3);font-size:12.5px;border-top:1px s
     <div class="grid g3" style="margin-top:34px">
       <div class="card">
         <h3>① 暖中性，而非冷中性</h3>
-        <p>底色从冷灰改为暖炭与亚麻米，色相统一在 30–40° 的暖区。屏幕前的长时间停留更柔和，也和「布料 / 木夹」的隐喻一致。</p>
+        <p>底色从冷灰改为亚麻米与暖白，色相统一在 30–40° 的暖区。久看不刺眼，也和「布料 / 木夹」的隐喻一致。</p>
       </div>
       <div class="card">
         <h3>② 层级靠留白与描边</h3>
-        <p>减少重阴影与高对比分隔。行高更舒展，分区用 11px 小标签 + 极细分隔线，让密集设置项「可扫读」而不是「一团黑」。</p>
+        <p>减少重阴影与高对比分隔。行高更舒展，分区用 11px 小标签 + 极细分隔线，让密集设置项「可扫读」而不是「挤成一团」。</p>
       </div>
       <div class="card">
         <h3>③ 强调色只在「当前」出现</h3>
@@ -507,7 +478,7 @@ footer{padding:40px 0 64px;color:var(--text-3);font-size:12.5px;border-top:1px s
       <div class="card">
         <h3>色彩性格</h3>
         <ul class="clean">
-          <li><b>亚麻米 / 暖炭</b> — 表面与背景，替代冷灰</li>
+          <li><b>亚麻米 / 暖白</b> — 表面与背景，替代冷灰</li>
           <li><b>绳索棕</b> — 品牌图形、分隔、装饰线</li>
           <li><b>琥珀金</b> — 唯一强调色，代表「当前/主要」</li>
           <li><b>陶土红</b> — 破坏性操作（移到回收站 / 丢弃）</li>
@@ -531,44 +502,42 @@ footer{padding:40px 0 64px;color:var(--text-3);font-size:12.5px;border-top:1px s
   <section id="tokens">
     <div class="eyebrow">02 · 设计系统</div>
     <h2>Linen 设计令牌</h2>
-    <p class="lead">这套值集中在一处（对应代码里的 <code>TrayPalette</code>），托盘菜单、卡片菜单、编辑器与安装器全部读取同一份变量，因此不会再「各自漂移」。切换上方主题可实时预览两套值。</p>
+    <p class="lead">这套值集中在一处（对应代码里的 <code>TrayPalette</code>），托盘菜单、卡片菜单、编辑器与安装器全部读取同一份变量，因此不会再「各自漂移」。本方案只维护<strong>这一套浅色值</strong>，不做深色变体。</p>
 
     <h3 style="margin-top:30px">色彩</h3>
     <div class="grid g3" style="margin-top:16px">
       <div class="card" style="padding:18px 20px">
-        <small>深色主题</small>
-        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px">
-          <span class="token" style="--c:#1B1815">底 #1B1815</span>
-          <span class="sw-dot" style="background:#1B1815"></span>
-          <span class="sw-dot" style="background:#26221D"></span>
-          <span class="sw-dot" style="background:#322C25"></span>
-          <span class="sw-dot" style="background:#453C31"></span>
-          <span class="sw-dot" style="background:#E9A23B"></span>
-          <span class="sw-dot" style="background:#B9905C"></span>
-          <span class="sw-dot" style="background:#E88C7D"></span>
-          <span class="sw-dot" style="background:#F6F0E7"></span>
-        </div>
-        <p style="font-size:12.5px">底 / 面 / 抬升 / 描边 / 强调 / 绳索 / 危险 / 文字</p>
-      </div>
-      <div class="card" style="padding:18px 20px">
-        <small>浅色主题</small>
-        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px">
+        <small>表面与文字</small>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px">
           <span class="sw-dot" style="background:#EFE8DC"></span>
-          <span class="sw-dot" style="background:#FFFFFF;border:1px solid #E2D7C7"></span>
-          <span class="sw-dot" style="background:#F0E9DD"></span>
+          <span class="sw-dot" style="background:#FFFFFF;box-shadow:inset 0 0 0 1px #E2D7C7"></span>
+          <span class="sw-dot" style="background:#F1EADE"></span>
+          <span class="sw-dot" style="background:#EDE4D6"></span>
           <span class="sw-dot" style="background:#E2D7C7"></span>
-          <span class="sw-dot" style="background:#A9600F"></span>
-          <span class="sw-dot" style="background:#9C7A46"></span>
-          <span class="sw-dot" style="background:#A8443A"></span>
+          <span class="sw-dot" style="background:#9C9182"></span>
+          <span class="sw-dot" style="background:#6A6055"></span>
           <span class="sw-dot" style="background:#2B2520"></span>
         </div>
-        <p style="font-size:12.5px">同样的语义槽位；强调色加深以保证对比度</p>
+        <p style="font-size:12.5px">底 #EFE8DC · 面 #FFFFFF · 抬升 #F1EADE · 悬停 #EDE4D6 · 描边 #E2D7C7 · 文字 #9C9182 / #6A6055 / #2B2520</p>
+      </div>
+      <div class="card" style="padding:18px 20px">
+        <small>强调与语义</small>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px">
+          <span class="sw-dot" style="background:#E9A23B"></span>
+          <span class="sw-dot" style="background:#9E5B0C"></span>
+          <span class="sw-dot" style="background:#9C7A46"></span>
+          <span class="sw-dot" style="background:#C29A64"></span>
+          <span class="sw-dot" style="background:#A8443A"></span>
+          <span class="sw-dot" style="background:#3E7A4E"></span>
+        </div>
+        <p style="font-size:12.5px">琥珀填充 #E9A23B（配深字 #2A1B0C）· 强调文字 #9E5B0C · 绳索 #9C7A46 · 木夹 #C29A64 · 危险 #A8443A · 成功 #3E7A4E</p>
       </div>
       <div class="card" style="padding:18px 20px">
         <small>用法规则</small>
         <ul class="clean" style="margin-top:10px">
           <li>强调色覆盖率 &lt; 5% 面积</li>
           <li>正文对比度 ≥ 4.5:1，大字 ≥ 3:1</li>
+          <li>琥珀作填充配深色字；作文字时用 #9E5B0C</li>
           <li>破坏性操作仅用陶土红，不用强调色</li>
           <li>描边一律 1px，不做彩色描边（除非选中态）</li>
         </ul>
@@ -674,7 +643,7 @@ footer{padding:40px 0 64px;color:var(--text-3);font-size:12.5px;border-top:1px s
           <div class="row"><span class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span><span class="label">保留在绳上</span><span class="value">尽可能多 <svg class="i arrow" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span></div>
           <div class="row"><span class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M4.5 5.5h15v13h-15zM4.5 10.5h15"/></svg></span><span class="label">大小</span><span class="value">中 <svg class="i arrow" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span></div>
         </div>
-        <div class="cap">新方案 · 暖炭 + 琥珀</div>
+        <div class="cap">新方案 · 亚麻米 + 琥珀</div>
       </div>
 
       <!-- 说明 -->
@@ -758,7 +727,7 @@ footer{padding:40px 0 64px;color:var(--text-3);font-size:12.5px;border-top:1px s
   <section id="editor">
     <div class="eyebrow">05 · 标注编辑器</div>
     <h2>标注编辑器</h2>
-    <p class="lead">长按卡片进入。现状的自定义标题栏方向是对的，新方案把它彻底并入 Linen：暖色工具栏、当前工具用琥珀强调、窗口按钮与系统一致，画布沉到暖炭而非纯黑。</p>
+    <p class="lead">长按卡片进入。现状的自定义标题栏方向是对的，新方案把它彻底并入 Linen：暖色工具栏、当前工具用琥珀强调、窗口按钮与系统一致，画布垫在暖灰底上而非纯黑。</p>
 
     <div class="stage" style="margin-top:26px">
       <div class="editor">
@@ -957,7 +926,7 @@ footer{padding:40px 0 64px;color:var(--text-3);font-size:12.5px;border-top:1px s
     <div class="stage" style="margin-top:26px">
       <div style="display:flex;gap:56px;flex-wrap:wrap;justify-content:center">
         <div>
-          <div class="iconstage">
+          <div class="iconstage" style="background:radial-gradient(120% 130% at 30% 0%,#2C2720 0%,#141210 70%)">
             <svg class="ic24" viewBox="0 0 64 64" fill="none">
               <path d="M4 18 Q32 31 60 18" stroke="#B9905C" stroke-width="3.4" stroke-linecap="round"/>
               <rect x="28.5" y="13" width="7" height="13" rx="3" fill="#D6B488" stroke="#8A6A3E" stroke-width="1.2"/>
@@ -967,7 +936,7 @@ footer{padding:40px 0 64px;color:var(--text-3);font-size:12.5px;border-top:1px s
               <line x1="25.5" y1="46.5" x2="38.5" y2="46.5" stroke="#C6B9A7" stroke-width="1.6" stroke-linecap="round"/>
             </svg>
           </div>
-          <div class="cap">深色背景 · 静态</div>
+          <div class="cap">深色任务栏 · 静态</div>
         </div>
         <div>
           <div class="iconstage lightish" style="background:#EDE6DA">
@@ -980,7 +949,7 @@ footer{padding:40px 0 64px;color:var(--text-3);font-size:12.5px;border-top:1px s
               <line x1="25.5" y1="46.5" x2="38.5" y2="46.5" stroke="#9C9182" stroke-width="1.6" stroke-linecap="round"/>
             </svg>
           </div>
-          <div class="cap">浅色背景 · 静态</div>
+          <div class="cap">浅色任务栏 · 静态</div>
         </div>
         <div>
           <div class="iconstage">
@@ -1034,22 +1003,23 @@ footer{padding:40px 0 64px;color:var(--text-3);font-size:12.5px;border-top:1px s
     <table class="table">
       <thead><tr><th>界面</th><th>现状</th><th>新方案</th></tr></thead>
       <tbody>
-        <tr><td>托盘菜单</td><td class="now">冷灰 #2B2B2B + 系统蓝，行 34px，勾选式开关</td><td>暖炭 + 亚麻表；行 36px；胶囊开关；键帽提示；分区降噪</td></tr>
+        <tr><td>托盘菜单</td><td class="now">冷灰 #2B2B2B + 系统蓝，行 34px，勾选式开关</td><td>亚麻米底 + 琥珀强调；行 36px；胶囊开关；键帽提示；分区降噪</td></tr>
         <tr><td>卡片右键菜单</td><td class="now">冷灰高亮，破坏性与禁用色接近</td><td>共享同一令牌；陶土红 / 低对比暖灰明确分离；补分隔线分组</td></tr>
-        <tr><td>标注编辑器</td><td class="now">自定义深色，接近 Win11 但偏冷</td><td>暖色工具栏；当前工具琥珀强调；画布改暖炭；状态栏补缩放</td></tr>
+        <tr><td>标注编辑器</td><td class="now">自定义深色，接近 Win11 但偏冷</td><td>暖色工具栏；当前工具琥珀强调；画布改暖灰；状态栏补缩放</td></tr>
         <tr><td>安装器</td><td class="now">深色但偏冷，线性按钮</td><td>与主程序同源：暖标题、胶囊语言、暖色输入、圆角进度条</td></tr>
         <tr><td>托盘图标</td><td class="now">灰色衣夹 + 蓝紫照片卡</td><td>绳索 + 木夹剪影；暖色；监视开启时实心琥珀点亮</td></tr>
+        <tr><td>主题模式</td><td class="now">深色（Win11 深灰 + 系统蓝）</td><td>单一浅色主题（暖色底 + 琥珀强调），不做深色变体</td></tr>
         <tr><td>色彩系统</td><td class="now">分散在 4 个文件，各自复制色值</td><td>统一到单一令牌集（扩展 TrayPalette），杜绝漂移</td></tr>
       </tbody>
     </table>
 
     <h2 style="margin-top:52px">待你确认</h2>
     <div class="card" style="margin-top:16px">
-      <div class="todo"><span class="q">1</span><div><b>是否接受「暖色 + 琥珀」这一整体方向？</b><p>若你更想要冷静专业的工具感，我可以把强调色换成「洗衣蓝」并压低饱和（保留同一套结构，只换配色）。</p></div></div>
-      <div class="todo"><span class="q">2</span><div><b>浅色主题是否保留这套暖米色？</b><p>也可改为纯中性白灰。暖米色更有品牌感，但接近屏幕默认观感时可能偏「暖」。</p></div></div>
-      <div class="todo"><span class="q">3</span><div><b>强调色覆盖率是否合适？</b><p>当前只在「当前工具 / 开启 / 主按钮」出现。若嫌不够醒目，可扩大到悬停态描边。</p></div></div>
+      <div class="todo"><span class="q">1</span><div><b>已确认：整体方向为「暖色 + 琥珀」，且只做单一浅色主题。</b><p>本稿已据此更新——已移除深色主题与主题切换，全部界面统一到浅色。</p></div></div>
+      <div class="todo"><span class="q">2</span><div><b>强调色覆盖率是否合适？</b><p>当前只在「当前工具 / 开启的开关 / 主按钮」出现（&lt; 5% 面积）。若嫌不够醒目，可扩大到悬停态描边。</p></div></div>
+      <div class="todo"><span class="q">3</span><div><b>浅色下琥珀的可读性处理是否接受？</b><p>兼顾品牌与可读：<b>填充</b>用亮琥珀 <code>#E9A23B</code>（配深色字），<b>文字</b>用深琥珀 <code>#9E5B0C</code>。若希望文字也用亮琥珀，需接受对比度下降。</p></div></div>
       <div class="todo"><span class="q">4</span><div><b>卡片菜单是否允许加「分享 / 取下」分隔线？</b><p>这属于结构改动，会让鼠标移动距离略增，但能显著降低误点。</p></div></div>
-      <div class="todo"><span class="q">5</span><div><b>确认后是否要落到代码？</b><p>本稿为视觉方案。确认方向后，可按 <code>TrayPalette</code> → 各界面 的顺序实现，并跑 <code>--export-menu / --export-annotation / --export-header</code> 出对比图。</p></div></div>
+      <div class="todo"><span class="q">5</span><div><b>是否现在落到代码？</b><p>本稿为视觉方案。可按 <code>TrayPalette</code> → 各界面 的顺序实现，并跑 <code>--export-menu / --export-annotation / --export-header</code> 出对比图核对。</p></div></div>
     </div>
 
     <p class="muted" style="margin-top:22px">
@@ -1059,18 +1029,8 @@ footer{padding:40px 0 64px;color:var(--text-3);font-size:12.5px;border-top:1px s
   </section>
 
   <footer>
-    Clothesline · Linen 重设计方案 · 范围不含主界面「晾衣绳」· 深色/浅色双主题 · 供评审确认
+    Clothesline · Linen 重设计方案 · 范围不含主界面「晾衣绳」· 单一浅色主题（暖色 + 琥珀）· 供评审确认
   </footer>
 </main>
-
-<script>
-function setTheme(t){
-  document.body.classList.toggle('theme-light', t === 'light');
-  document.getElementById('btnDark').classList.toggle('on', t === 'dark');
-  document.getElementById('btnLight').classList.toggle('on', t === 'light');
-}
-// 深色为默认
-setTheme('dark');
-</script>
 </body>
 </html>
