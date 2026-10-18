@@ -7,8 +7,9 @@ namespace ClotheslineSetup;
 /// The installer's single window. Built rather than designed in the editor
 /// because it ships as one self-contained exe with no satellite XAML.
 ///
-/// The palette is the same one the application uses (see TrayPalette), so the
-/// installer and the thing it installs read as one product.
+/// The palette is the installer's mirror of the application's Linen theme
+/// (see Theme), so the installer and the thing it installs read as one
+/// product. Single light theme only.
 ///
 /// Layout is positioned by hand rather than through FlowLayoutPanel: a flow
 /// panel inside a percent-sized table cell scrolls instead of reflowing, which
@@ -16,15 +17,6 @@ namespace ClotheslineSetup;
 /// </summary>
 internal sealed class MainForm : Form
 {
-    private static readonly Color BgWindow = Color.FromArgb(0x1E, 0x1E, 0x1E);
-    private static readonly Color BgCard = Color.FromArgb(0x2B, 0x2B, 0x2B);
-    private static readonly Color BgField = Color.FromArgb(0x33, 0x33, 0x33);
-    private static readonly Color FgPrimary = Color.White;
-    private static readonly Color FgSecondary = Color.FromArgb(0xB4, 0xB4, 0xB4);
-    private static readonly Color FgMuted = Color.FromArgb(0x8A, 0x8A, 0x8A);
-    private static readonly Color Accent = Color.FromArgb(0x4C, 0xC2, 0xFF);
-    private static readonly Color Stroke = Color.FromArgb(0x3D, 0x3D, 0x3D);
-
     private const int Side = 40;
     private const int HeaderH = 96;
     private const int FooterH = 68;
@@ -42,13 +34,13 @@ internal sealed class MainForm : Form
     private Label _locationLabel = null!;
     private TextBox _pathBox = null!;
     private FlatButton _browse = null!;
-    private CheckBox _desktopBox = null!;
-    private CheckBox _startMenuBox = null!;
+    private AmberCheckBox _desktopBox = null!;
+    private AmberCheckBox _startMenuBox = null!;
     private FlatButton _primary = null!;
     private FlatButton _secondary = null!;
     private Label _status = null!;
     private FlatProgressBar _bar = null!;
-    private CheckBox _launchBox = null!;
+    private AmberCheckBox _launchBox = null!;
 
     private int _cursor;
     private int _tallHeight;
@@ -63,12 +55,12 @@ internal sealed class MainForm : Form
         MaximizeBox = false;
         MinimizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
-        BackColor = BgWindow;
-        ForeColor = FgPrimary;
-        Font = new Font("Segoe UI Variable Display", 9.5f);
+        BackColor = Theme.BgBase;
+        ForeColor = Theme.FgPrimary;
+        Font = new Font(Theme.FontFamily, 9.5f);
         DoubleBuffered = true;
         ShowIcon = false;
-        ClientSize = new Size(660, uninstall ? 330 : 476);
+        ClientSize = new Size(640, uninstall ? 330 : 476);
 
         Build();
 
@@ -93,25 +85,25 @@ internal sealed class MainForm : Form
     private void Build()
     {
         // Header.
-        var header = new Panel { Location = new Point(0, 0), Size = new Size(ClientSize.Width, HeaderH), BackColor = BgWindow };
+        var header = new Panel { Location = new Point(0, 0), Size = new Size(ClientSize.Width, HeaderH), BackColor = Theme.BgBase };
         header.Paint += (_, e) =>
         {
-            using var pen = new Pen(Stroke);
+            using var pen = new Pen(Theme.Stroke);
             e.Graphics.DrawLine(pen, Side, HeaderH - 1, ClientSize.Width - Side, HeaderH - 1);
         };
         header.Controls.Add(new Label
         {
             Text = Installer.AppName,
-            Font = new Font("Segoe UI Variable Display", 21f, FontStyle.Bold),
-            ForeColor = FgPrimary,
+            Font = new Font(Theme.FontFamily, 21f, FontStyle.Bold),
+            ForeColor = Theme.AccentText,
             AutoSize = true,
             Location = new Point(Side, 22),
         });
         header.Controls.Add(new Label
         {
             Text = _s.Tagline,
-            Font = new Font("Segoe UI Variable Display", 10f),
-            ForeColor = FgSecondary,
+            Font = new Font(Theme.FontFamily, 10f),
+            ForeColor = Theme.FgSecondary,
             AutoSize = true,
             Location = new Point(Side + 2, 60),
         });
@@ -120,7 +112,7 @@ internal sealed class MainForm : Form
         // Body.
         _body.Location = new Point(0, HeaderH);
         _body.Size = new Size(ClientSize.Width, ClientSize.Height - HeaderH - FooterH);
-        _body.BackColor = BgWindow;
+        _body.BackColor = Theme.BgBase;
         Controls.Add(_body);
         BuildBody();
 
@@ -129,11 +121,11 @@ internal sealed class MainForm : Form
         {
             Location = new Point(0, ClientSize.Height - FooterH),
             Size = new Size(ClientSize.Width, FooterH),
-            BackColor = BgWindow,
+            BackColor = Theme.BgBase,
         };
         footer.Paint += (_, e) =>
         {
-            using var pen = new Pen(Stroke);
+            using var pen = new Pen(Theme.Stroke);
             e.Graphics.DrawLine(pen, Side, 0, ClientSize.Width - Side, 0);
         };
 
@@ -141,8 +133,8 @@ internal sealed class MainForm : Form
         {
             Location = new Point(Side, 14),
             Size = new Size(ClientSize.Width - Side * 2, 20),
-            ForeColor = FgSecondary,
-            Font = new Font("Segoe UI", 9f),
+            ForeColor = Theme.FgSecondary,
+            Font = new Font(Theme.FontFamily, 9f),
             Visible = false,
         };
         footer.Controls.Add(_status);
@@ -162,6 +154,7 @@ internal sealed class MainForm : Form
             AutoSize = true,
             Anchor = AnchorStyles.Right | AnchorStyles.Bottom,
             Location = new Point(ClientSize.Width - Side - 250, 20),
+            BackColor = Theme.BgBase,
         };
 
         _secondary = new FlatButton
@@ -170,6 +163,7 @@ internal sealed class MainForm : Form
             Width = 104,
             Height = 36,
             Margin = new Padding(0, 0, 10, 0),
+            Ghost = true,
         };
         _secondary.Click += (_, _) => Close();
         row.Controls.Add(_secondary);
@@ -209,8 +203,8 @@ internal sealed class MainForm : Form
         _langLabel = Stack(new Label
         {
             Text = _s.Language,
-            Font = new Font("Segoe UI Variable Display", 9.5f, FontStyle.Bold),
-            ForeColor = FgMuted,
+            Font = new Font(Theme.FontFamily, 9.5f, FontStyle.Bold),
+            ForeColor = Theme.FgMuted,
             AutoSize = true,
             Height = 18,
         }, installOnly: true);
@@ -219,6 +213,7 @@ internal sealed class MainForm : Form
         {
             Location = new Point(Side, _cursor + 8),
             Size = new Size(ClientSize.Width - Side * 2, 34),
+            BackColor = Theme.BgBase,
         };
         _installOnly.Add(langRow);
         int bw = (langRow.Width - 4 * 8) / Loc.Languages.Length;
@@ -231,6 +226,7 @@ internal sealed class MainForm : Form
                 Size = new Size(bw, 32),
                 Location = new Point(i * (bw + 8), 0),
                 Tag = code,
+                Capsule = true,
             };
             b.Click += (_, _) => SetLanguage(code);
             _langButtons[i] = b;
@@ -242,8 +238,8 @@ internal sealed class MainForm : Form
         _welcomeTitle = Stack(new Label
         {
             Text = _s.WelcomeTitle,
-            Font = new Font("Segoe UI Variable Display", 14f, FontStyle.Bold),
-            ForeColor = FgPrimary,
+            Font = new Font(Theme.FontFamily, 14f, FontStyle.Bold),
+            ForeColor = Theme.AccentText,
             AutoSize = false,
             Size = new Size(ClientSize.Width - Side * 2, 24),
         });
@@ -253,8 +249,8 @@ internal sealed class MainForm : Form
         _welcomeBody = Stack(new Label
         {
             Text = _s.WelcomeBody,
-            Font = new Font("Segoe UI Variable Display", 10f),
-            ForeColor = FgSecondary,
+            Font = new Font(Theme.FontFamily, 10f),
+            ForeColor = Theme.FgSecondary,
             AutoSize = false,
             Size = new Size(ClientSize.Width - Side * 2, 118),
         }, gap: 8);
@@ -264,8 +260,8 @@ internal sealed class MainForm : Form
         _locationLabel = Stack(new Label
         {
             Text = _s.Location,
-            Font = new Font("Segoe UI Variable Display", 9.5f, FontStyle.Bold),
-            ForeColor = FgMuted,
+            Font = new Font(Theme.FontFamily, 9.5f, FontStyle.Bold),
+            ForeColor = Theme.FgMuted,
             AutoSize = true,
             Height = 18,
         }, installOnly: true);
@@ -274,25 +270,36 @@ internal sealed class MainForm : Form
         {
             Location = new Point(Side, _cursor + 6),
             Size = new Size(ClientSize.Width - Side * 2, 34),
+            BackColor = Theme.BgBase,
         };
         _installOnly.Add(locRow);
 
+        // The path field sits on the warm elevated surface, ringed by a 1px
+        // hairline: a 1px-padded panel behind a borderless TextBox, because
+        // FixedSingle would draw the border in a system colour instead.
+        var pathPanel = new Panel
+        {
+            Location = new Point(0, 2),
+            Size = new Size(locRow.Width - 100, 30),
+            BackColor = Theme.Stroke,
+            Padding = new Padding(1),
+        };
         _pathBox = new TextBox
         {
-            Location = new Point(0, 3),
-            Size = new Size(locRow.Width - 100, 28),
-            BackColor = BgField,
-            ForeColor = FgPrimary,
-            BorderStyle = BorderStyle.FixedSingle,
-            Font = new Font("Segoe UI", 9.5f),
+            Dock = DockStyle.Fill,
+            BackColor = Theme.BgElevated,
+            ForeColor = Theme.FgPrimary,
+            BorderStyle = BorderStyle.None,
+            Font = new Font(Theme.FontFamily, 9.5f),
         };
-        locRow.Controls.Add(_pathBox);
+        pathPanel.Controls.Add(_pathBox);
+        locRow.Controls.Add(pathPanel);
 
         _browse = new FlatButton
         {
             Text = _s.Browse,
-            Size = new Size(92, 28),
-            Location = new Point(locRow.Width - 92, 3),
+            Size = new Size(92, 30),
+            Location = new Point(locRow.Width - 92, 2),
         };
         _browse.Click += Browse_Click;
         locRow.Controls.Add(_browse);
@@ -300,37 +307,25 @@ internal sealed class MainForm : Form
         _body.Controls.Add(locRow);
         _cursor += 6 + 34 + 12;
 
-        _desktopBox = Stack(new CheckBox
+        _desktopBox = Stack(new AmberCheckBox
         {
             Text = _s.Desktop,
-            ForeColor = FgPrimary,
-            AutoSize = true,
-            Height = 22,
             Checked = true,
-            FlatStyle = FlatStyle.Flat,
         }, gap: 2, installOnly: true);
 
-        _startMenuBox = Stack(new CheckBox
+        _startMenuBox = Stack(new AmberCheckBox
         {
             Text = _s.StartMenu,
-            ForeColor = FgPrimary,
-            AutoSize = true,
-            Height = 22,
             Checked = true,
-            FlatStyle = FlatStyle.Flat,
         }, gap: 2, installOnly: true);
 
         // The launch checkbox only exists once something has been installed,
         // and sits directly under the finished message so it reads as part of
         // the same block rather than floating at the bottom of the window.
-        _launchBox = Stack(new CheckBox
+        _launchBox = Stack(new AmberCheckBox
         {
             Text = _s.Launch,
-            ForeColor = FgPrimary,
-            AutoSize = true,
-            Height = 22,
             Checked = true,
-            FlatStyle = FlatStyle.Flat,
         }, gap: 18);
 
         _tallHeight = ClientSize.Height;
@@ -511,13 +506,18 @@ internal sealed class MainForm : Form
 
         foreach (var c in _installOnly) c.Visible = false;
 
+        // Uninstall is a single destructive action: the Cancel button is
+        // hidden (the title-bar close is still there), leaving only the
+        // uninstall button and the read-only path.
+        _secondary.Visible = false;
+
         // The path is shown read-only, because guessing it is how an
         // uninstaller deletes the wrong folder.
         var path = new Label
         {
             Text = TargetFolder,
-            Font = new Font("Segoe UI", 9f),
-            ForeColor = FgMuted,
+            Font = new Font(Theme.FontFamily, 9f),
+            ForeColor = Theme.FgMuted,
             AutoSize = false,
             Size = new Size(ClientSize.Width - Side * 2, 18),
             Location = new Point(Side, _welcomeBody.Bottom + 22),
