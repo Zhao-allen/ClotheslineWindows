@@ -51,31 +51,26 @@ namespace Clothesline.UI;
 /// </summary>
 internal sealed class AnnotationWindow : Window
 {
-    // ── Win11 dark palette, matching the tray menu ──
-    private static readonly Brush BgWindow   = Frozen(Color.FromRgb(0x20, 0x20, 0x20));
-    private static readonly Brush BgCard     = Frozen(Color.FromRgb(0x2B, 0x2B, 0x2B));
-    private static readonly Brush BgCanvas   = Frozen(Color.FromRgb(0x14, 0x14, 0x14));
-    private static readonly Brush BgHover    = Frozen(Color.FromRgb(0x3C, 0x3C, 0x3C));
-    private static readonly Brush BgPressed  = Frozen(Color.FromRgb(0x45, 0x45, 0x45));
-    private static readonly Brush BgElevated = Frozen(Color.FromRgb(0x34, 0x34, 0x34));
-    private static readonly Brush StrokeLine = Frozen(Color.FromRgb(0x3D, 0x3D, 0x3D));
-    private static readonly Brush StrokeLine2 = Frozen(Color.FromRgb(0x4A, 0x4A, 0x4A));
-    private static readonly Brush FgPrimary  = Frozen(Colors.White);
-    private static readonly Brush FgSecond   = Frozen(Color.FromRgb(0xC8, 0xC8, 0xC8));
-    private static readonly Brush FgMuted    = Frozen(Color.FromRgb(0x8A, 0x8A, 0x8A));
-    private static readonly Brush Accent     = Frozen(Color.FromRgb(0x4C, 0xC2, 0xFF));
-    private static readonly Brush AccentSoft = Frozen(Color.FromArgb(0x30, 0x4C, 0xC2, 0xFF));
-    private static readonly Brush AccentRing = Frozen(Color.FromArgb(0x73, 0x4C, 0xC2, 0xFF));
-    private static readonly Brush AccentInk  = Frozen(Color.FromRgb(0x0B, 0x2A, 0x3D));
-
-    private static Brush Frozen(Color c)
-    {
-        var b = new SolidColorBrush(c);
-        b.Freeze();
-        return b;
-    }
-
-    private const string UiFont = "Segoe UI Variable Display, Segoe UI";
+    // ── Linen palette: single light theme. Every value lives in TrayPalette;
+    // these fields only redirect so the paint code below keeps reading the
+    // same names. Do not restate colours here.
+    private static readonly Brush BgWindow   = TrayPalette.WBrush(TrayPalette.BgSurface);
+    private static readonly Brush BgCard     = TrayPalette.WBrush(TrayPalette.BgPanel);
+    private static readonly Brush BgCanvas   = TrayPalette.WBrush(TrayPalette.BgCanvas);
+    private static readonly Brush BgHover    = TrayPalette.WBrush(TrayPalette.BgHover);
+    private static readonly Brush BgPressed  = TrayPalette.WBrush(TrayPalette.BgPressed);
+    private static readonly Brush BgElevated = TrayPalette.WBrush(TrayPalette.BgElevated);
+    private static readonly Brush StrokeLine = TrayPalette.WBrush(TrayPalette.Stroke);
+    private static readonly Brush StrokeLine2 = TrayPalette.WBrush(TrayPalette.StrokeStrong);
+    private static readonly Brush FgPrimary  = TrayPalette.WBrush(TrayPalette.FgPrimary);
+    private static readonly Brush FgSecond   = TrayPalette.WBrush(TrayPalette.FgSecondary);
+    private static readonly Brush FgMuted    = TrayPalette.WBrush(TrayPalette.FgMuted);
+    private static readonly Brush Accent     = TrayPalette.WBrush(TrayPalette.Accent);
+    private static readonly Brush AccentSoft = TrayPalette.WBrush(TrayPalette.AccentSoft);
+    private static readonly Brush AccentRing = TrayPalette.WBrush(TrayPalette.AccentRing);
+    private static readonly Brush AccentInk  = TrayPalette.WBrush(TrayPalette.AccentInk);
+    // White glyph on the close button's terracotta hover.
+    private static readonly Brush FgOnDanger = TrayPalette.WBrush(TrayPalette.DangerHoverInk);
 
     /// <summary>
     /// Where the last successful save landed. Equal to the original path when
@@ -155,6 +150,7 @@ internal sealed class AnnotationWindow : Window
     {
         public required Border Root { get; init; }
         public required WpfPath Icon { get; init; }
+        public required TextBlock Badge { get; init; }
         public required Func<bool> IsActive { get; init; }
         public bool Hover;
     }
@@ -194,10 +190,10 @@ internal sealed class AnnotationWindow : Window
         TextOptions.SetTextFormattingMode(this, TextFormattingMode.Display);
 
         // Custom chrome: the default ToolWindow title bar is a light grey
-        // strip that fights the dark canvas.
+        // strip that fights the canvas.
         WindowChrome.SetWindowChrome(this, new WindowChrome
         {
-            CaptionHeight = 42,
+            CaptionHeight = 44,
             ResizeBorderThickness = new Thickness(6),
             GlassFrameThickness = new Thickness(0),
             CornerRadius = new CornerRadius(0),
@@ -250,13 +246,17 @@ internal sealed class AnnotationWindow : Window
 
     private void BuildUi()
     {
-        // Chrome is 42px title + 58px toolbar + 34px status = 134. The old
+        // Chrome is 44px title + 60px toolbar + 36px status = 140. The old
         // +120 was 14 short, so the image always overflowed the viewport and
         // the editor opened with a scrollbar and its bottom edge cropped.
         Width = Math.Min(1200, _original.PixelWidth + 60);
-        Height = Math.Min(900, _original.PixelHeight + 134);
+        Height = Math.Min(900, _original.PixelHeight + 140);
 
-        var root = new Grid { Background = BgWindow };
+        var root = new Grid
+        {
+            Background = BgWindow,
+            FontFamily = new System.Windows.Media.FontFamily(TrayPalette.FontFamily)
+        };
         Content = root;
         root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });   // title bar
         root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });   // toolbar
@@ -332,7 +332,7 @@ internal sealed class AnnotationWindow : Window
     {
         var bar = new Grid
         {
-            Height = 42,
+            Height = 44,
             Background = BgCard
         };
         bar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -341,11 +341,11 @@ internal sealed class AnnotationWindow : Window
         bar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         bar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        // Accent dot + file name + dimensions
+        // Amber block + file name + dimensions
         var dot = new Border
         {
-            Width = 9,
-            Height = 9,
+            Width = 10,
+            Height = 10,
             CornerRadius = new CornerRadius(2),
             Background = Accent,
             Margin = new Thickness(14, 0, 10, 0),
@@ -412,7 +412,7 @@ internal sealed class AnnotationWindow : Window
         var btn = new Border
         {
             Width = 44,
-            Height = 42,
+            Height = 44,
             Child = text,
             Background = Brushes.Transparent,
             Cursor = WpfCursors.Arrow
@@ -427,8 +427,8 @@ internal sealed class AnnotationWindow : Window
         WindowChrome.SetIsHitTestVisibleInChrome(btn, true);
         btn.MouseEnter += (_, _) =>
         {
-            btn.Background = isClose ? Frozen(Color.FromRgb(0xC4, 0x2B, 0x1C)) : BgHover;
-            text.Foreground = FgPrimary;
+            btn.Background = isClose ? TrayPalette.WBrush(TrayPalette.DangerHover) : BgHover;
+            text.Foreground = isClose ? FgOnDanger : FgPrimary;
         };
         btn.MouseLeave += (_, _) =>
         {
@@ -455,7 +455,7 @@ internal sealed class AnnotationWindow : Window
         var bar = new StackPanel
         {
             Orientation = WpfOrientation.Horizontal,
-            Height = 58,
+            Height = 60,
             Background = BgCard
         };
 
@@ -529,7 +529,7 @@ internal sealed class AnnotationWindow : Window
         // Actions. A StackPanel left-packs its children, so the groups above
         // go in one, and the buttons go in a second one layered on top that
         // stretches and right-aligns them.
-        var host = new Grid { Height = 58, Background = BgCard };
+        var host = new Grid { Height = 60, Background = BgCard };
         host.Children.Add(bar);
         var right = new StackPanel
         {
@@ -621,13 +621,13 @@ internal sealed class AnnotationWindow : Window
         var chip = new Border
         {
             Child = content,
-            CornerRadius = new CornerRadius(7),
+            CornerRadius = new CornerRadius(TrayPalette.RadiusControl),
             Background = Brushes.Transparent,
             Cursor = WpfCursors.Hand,
             ToolTip = $"{I18n.Get(labelKey)} ({shortcut})"
         };
 
-        var entry = new ToolChip { Root = chip, Icon = icon, IsActive = isActive };
+        var entry = new ToolChip { Root = chip, Icon = icon, Badge = badge, IsActive = isActive };
         _toolChips.Add(entry);
 
         chip.MouseEnter += (_, _) => { entry.Hover = true; RefreshChips(); };
@@ -659,7 +659,7 @@ internal sealed class AnnotationWindow : Window
             Child = icon,
             Width = 38,
             Height = 38,
-            CornerRadius = new CornerRadius(7),
+            CornerRadius = new CornerRadius(TrayPalette.RadiusControl),
             Background = Brushes.Transparent,
             Cursor = WpfCursors.Hand,
             ToolTip = shortcut is null ? I18n.Get(labelKey) : $"{I18n.Get(labelKey)} ({shortcut})"
@@ -697,7 +697,7 @@ internal sealed class AnnotationWindow : Window
         {
             Child = content,
             Height = 34,
-            CornerRadius = new CornerRadius(7),
+            CornerRadius = new CornerRadius(TrayPalette.RadiusControl),
             Padding = new Thickness(16, 0, 16, 0),
             Margin = new Thickness(6, 0, 0, 0),
             Cursor = WpfCursors.Hand,
@@ -810,7 +810,7 @@ internal sealed class AnnotationWindow : Window
             Child = dot,
             Width = 30,
             Height = 38,
-            CornerRadius = new CornerRadius(7),
+            CornerRadius = new CornerRadius(TrayPalette.RadiusControl),
             Background = Brushes.Transparent,
             Cursor = WpfCursors.Hand,
             ToolTip = I18n.Get(labelKey)
@@ -922,7 +922,7 @@ internal sealed class AnnotationWindow : Window
 
     private UIElement BuildStatusBar()
     {
-        var grid = new Grid { Height = 34, Background = BgCard };
+        var grid = new Grid { Height = 36, Background = BgCard };
 
         var left = new StackPanel
         {
@@ -1010,7 +1010,7 @@ internal sealed class AnnotationWindow : Window
             Child = content,
             Height = 22,
             MinWidth = 24,
-            CornerRadius = new CornerRadius(5),
+            CornerRadius = new CornerRadius(TrayPalette.RadiusControl),
             Padding = text is null ? new Thickness(0) : new Thickness(8, 0, 8, 0),
             Background = Brushes.Transparent,
             Cursor = WpfCursors.Hand,
@@ -1078,13 +1078,16 @@ internal sealed class AnnotationWindow : Window
     {
         foreach (var chip in _toolChips)
         {
+            // Live tool: solid amber fill, a translucent amber inner ring,
+            // and dark-ink glyph + shortcut badge so both stay readable.
             bool active = chip.IsActive();
-            chip.Root.Background = active ? AccentSoft
+            chip.Root.Background = active ? Accent
                                  : chip.Hover ? BgHover
                                  : Brushes.Transparent;
             chip.Root.BorderThickness = new Thickness(active ? 1 : 0);
             chip.Root.BorderBrush = active ? AccentRing : Brushes.Transparent;
-            chip.Icon.Stroke = active ? Accent : FgSecond;
+            chip.Icon.Stroke = active ? AccentInk : FgSecond;
+            chip.Badge.Foreground = active ? AccentInk : FgMuted;
         }
     }
 
