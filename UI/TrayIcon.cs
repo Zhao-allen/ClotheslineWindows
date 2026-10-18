@@ -32,30 +32,6 @@ using WTranslate = System.Windows.Media.TranslateTransform;
 namespace Clothesline.UI;
 
 /// <summary>
-/// The Win11 dark palette shared by the tray menu and its custom-painted
-/// parts (header strip, thumbnail strip, toggle switches).
-///
-/// This is the app's single source of truth for the dark theme. WPF surfaces
-/// do not restate these values: <see cref="CardMenuTheme"/> reads them and
-/// adapts them to WPF brushes, so the tray menu and the card's right-click
-/// menu cannot drift apart. Add a colour here, not in a UI file.
-/// </summary>
-internal static class TrayPalette
-{
-    public static readonly GColor BgCard      = GColor.FromArgb(43, 43, 43);    // #2B2B2B
-    public static readonly GColor BgHover     = GColor.FromArgb(60, 60, 60);
-    public static readonly GColor BgElevated  = GColor.FromArgb(52, 52, 52);
-    public static readonly GColor FgPrimary   = GColor.FromArgb(255, 255, 255);
-    public static readonly GColor FgSecondary = GColor.FromArgb(200, 200, 200);
-    public static readonly GColor FgMuted     = GColor.FromArgb(138, 138, 138);
-    public static readonly GColor Accent      = GColor.FromArgb(76, 194, 255);  // #4CC2FF
-    public static readonly GColor AccentSoft  = GColor.FromArgb(40, 76, 194, 255);
-    public static readonly GColor Stroke      = GColor.FromArgb(61, 61, 61);    // #3D3D3D
-    public static readonly GColor Danger      = GColor.FromArgb(255, 153, 164);
-    public static readonly GColor KnobDark    = GColor.FromArgb(11, 42, 61);
-}
-
-/// <summary>
 /// System tray icon with the full Clothesline menu.
 ///
 /// v0.2.0 redesign (see Clothesline-UI重设计稿.html):
@@ -238,7 +214,7 @@ internal sealed class TrayIcon : IDisposable
         AddSection(menu, I18n.Get("SectionLine"));
 
         var toggle = MakeItem(_window.IsRevealed ? I18n.Get("HideLine") : I18n.Get("ShowLine"),
-                              () => _window.Toggle(), IcoLine);
+                              () => _window.Toggle(), IcoLine, keycap: true);
         toggle.ShortcutKeyDisplayString = "Ctrl+Alt+T";
         menu.Items.Add(toggle);
         _refreshers.Add(() =>
@@ -252,7 +228,7 @@ internal sealed class TrayIcon : IDisposable
         // clipboard. The URI must be ms-screenclip://capture/image?rectangle:
         // the older ms-screensketch: scheme only *opens* the Snipping Tool
         // window, which is why this entry was dropped in v0.1.9.
-        var shot = MakeItem(I18n.Get("TakeScreenshot"), StartScreenshot, IcoScreenshot);
+        var shot = MakeItem(I18n.Get("TakeScreenshot"), StartScreenshot, IcoScreenshot, keycap: true);
         shot.ShortcutKeyDisplayString = "Win+Shift+S";
         menu.Items.Add(shot);
 
@@ -452,7 +428,7 @@ internal sealed class TrayIcon : IDisposable
             BackColor = TrayPalette.BgCard,
             ForeColor = TrayPalette.FgMuted,
             Font = new GFont("Segoe UI Variable Display", 8.5f, GFontStyle.Bold),
-            Padding = new Padding(0, 8, 0, 3),
+            Padding = new Padding(0, TrayPalette.SectionTopMargin, 0, 3),
             Margin = new Padding(0)
         });
     }
@@ -467,10 +443,14 @@ internal sealed class TrayIcon : IDisposable
         });
     }
 
-    /// <summary>Plain row. A null action makes a non-interactive row (e.g. a watched folder).</summary>
-    private ToolStripMenuItem MakeItem(string text, Action? action, string? icon)
+    /// <summary>
+    /// Plain row. A null action makes a non-interactive row (e.g. a watched
+    /// folder). Pass <c>keycap</c> for rows whose shortcut hint should read as
+    /// a keycap rather than bare text.
+    /// </summary>
+    private MenuRow MakeItem(string text, Action? action, string? icon, bool keycap = false)
     {
-        var item = new ToolStripMenuItem(text);
+        var item = new MenuRow(text, keycap);
         StyleRow(item);
         if (icon is not null) item.Image = LoadIcon(icon, TrayPalette.FgSecondary);
         if (action is not null)
@@ -564,11 +544,11 @@ internal sealed class TrayIcon : IDisposable
     private static void SetValue(ValueRow item, string value) => item.SetValue(value);
 
     /// <summary>
-    /// Win11-style row metrics: 6px vertical padding, no horizontal padding.
-    /// With the 10pt font that lands on a 34px row - tight enough to read as
-    /// compact, and still above the 32px floor Win11 uses for a comfortable
-    /// click target. The same helper runs for sub-menu rows, so both levels
-    /// are the same height.
+    /// Linen row metrics: 7px vertical padding, no horizontal padding. With
+    /// the 10pt font that lands on <see cref="TrayPalette.TrayRowHeight"/>
+    /// (36px) - tight enough to read as compact, and comfortably above the
+    /// 32px floor for a click target. The same helper runs for sub-menu rows,
+    /// so both levels are the same height.
     ///
     /// The horizontal inset is deliberately left at zero. A drop-down sizes
     /// itself to the *content* width of its widest row and does not add the
@@ -582,7 +562,7 @@ internal sealed class TrayIcon : IDisposable
         // Set the font on every row: sub-menu rows live in their own
         // auto-created ContextMenuStrip whose font does not always inherit.
         item.Font = new GFont("Segoe UI Variable Display", 10f, GUnit.Point);
-        item.Padding = new Padding(0, 6, 0, 6);
+        item.Padding = new Padding(0, 7, 0, 7);
         item.Margin = new Padding(0);
         item.TextAlign = GAlign.MiddleLeft;
     }
@@ -657,43 +637,68 @@ internal sealed class TrayIcon : IDisposable
     }
 
     /// <summary>
-    /// Draws a clothesline icon: a curved rope with a photo hanging from a
-    /// clothespin. Filled (colored) when clipboard watch is on.
+    /// Draws the tray mark: a rope with a wooden peg and a hanging photo, as
+    /// a minimal silhouette. Three states:
+    /// <list type="bullet">
+    /// <item>clipboard monitoring on - solid amber (the "lit" state);</item>
+    /// <item>off on a light taskbar - rope <c>#9C7A46</c> + peg <c>#C29A64</c>;</item>
+    /// <item>off on a dark taskbar - the same motif tinted toward white so it
+    /// reads on dark.</item>
+    /// </list>
+    /// The taskbar theme comes from the Personalize key and is re-read on
+    /// every paint; the icon itself is refreshed when the menu is rebuilt or
+    /// clipboard monitoring toggles, so a theme change lands at the next
+    /// rebuild at the latest. Strokes are 5px at the 64px render size and the
+    /// peg and photo are filled, so the mark survives the shell's downscale
+    /// to 48/32/16px.
     /// </summary>
     internal static System.Drawing.Icon MakeTShirtIcon(bool filled)
     {
         const int size = 64;
+
+        GColor ropeC, pegC, cardC;
+        if (filled)
+        {
+            // Lit: one solid amber mark.
+            ropeC = pegC = cardC = TrayPalette.Accent;
+        }
+        else if (TaskbarIsLight())
+        {
+            ropeC = TrayPalette.Rope;
+            pegC = TrayPalette.Peg;
+            cardC = Tint(TrayPalette.Peg, 0.25f);
+        }
+        else
+        {
+            ropeC = Tint(TrayPalette.Rope, 0.50f);
+            pegC = Tint(TrayPalette.Peg, 0.50f);
+            cardC = Tint(TrayPalette.Peg, 0.62f);
+        }
+
         var visual = new DrawingVisual();
         using (var dc = visual.RenderOpen())
         {
-            var ropeColor = filled ? WColor.FromRgb(80, 80, 80) : WColor.FromRgb(140, 140, 140);
-            var ropePen = new WPen(new WSolidBrush(ropeColor), 2.5);
+            // Rope: a shallow sagging curve, round caps.
             var ropeGeo = new StreamGeometry();
             using (var ctx = ropeGeo.Open())
             {
-                ctx.BeginFigure(new WPoint(4, 18), false, false);
-                ctx.QuadraticBezierTo(new WPoint(32, 30), new WPoint(60, 18), true, false);
+                ctx.BeginFigure(new WPoint(6, 20), false, false);
+                ctx.QuadraticBezierTo(new WPoint(32, 34), new WPoint(58, 20), true, false);
             }
-            dc.DrawGeometry(null, ropePen, ropeGeo);
-
-            var pinColor = filled ? WColor.FromRgb(70, 70, 70) : WColor.FromRgb(150, 150, 150);
-            dc.DrawRoundedRectangle(new WSolidBrush(pinColor), null,
-                new System.Windows.Rect(29, 14, 6, 12), 1, 1);
-
-            var cardColor = filled ? WColor.FromRgb(100, 80, 200) : WColor.FromRgb(180, 180, 180);
-            dc.DrawRoundedRectangle(new WSolidBrush(cardColor),
-                new WPen(System.Windows.Media.Brushes.White, 1.5),
-                new System.Windows.Rect(20, 26, 24, 28), 4, 4);
-            dc.DrawRectangle(new WSolidBrush(WColor.FromArgb(180, 255, 255, 255)), null,
-                new System.Windows.Rect(24, 30, 16, 14));
-            var mountain = new StreamGeometry();
-            using (var mctx = mountain.Open())
+            ropeGeo.Freeze();
+            dc.DrawGeometry(null, new WPen(new WSolidBrush(TrayPalette.W(ropeC)), 5)
             {
-                mctx.BeginFigure(new WPoint(26, 40), true, true);
-                mctx.LineTo(new WPoint(31, 34), true, false);
-                mctx.LineTo(new WPoint(36, 40), true, false);
-            }
-            dc.DrawGeometry(System.Windows.Media.Brushes.White, null, mountain);
+                StartLineCap = PenLineCap.Round,
+                EndLineCap = PenLineCap.Round
+            }, ropeGeo);
+
+            // Peg: a wooden pin straddling the rope.
+            dc.DrawRoundedRectangle(new WSolidBrush(TrayPalette.W(pegC)), null,
+                new System.Windows.Rect(26.5, 21, 11, 17), 3, 3);
+
+            // Photo hanging from the peg.
+            dc.DrawRoundedRectangle(new WSolidBrush(TrayPalette.W(cardC)), null,
+                new System.Windows.Rect(19, 34, 26, 24), 3, 3);
         }
 
         var rtb = new RenderTargetBitmap(size, size, 96, 96, PixelFormats.Pbgra32);
@@ -719,6 +724,30 @@ internal sealed class TrayIcon : IDisposable
         }
     }
 
+    /// <summary>
+    /// Mixes a colour toward white. Used for the dark-taskbar icon state.
+    /// </summary>
+    private static GColor Tint(GColor c, float towardWhite) => GColor.FromArgb(
+        c.A,
+        (int)(c.R + (255 - c.R) * towardWhite),
+        (int)(c.G + (255 - c.G) * towardWhite),
+        (int)(c.B + (255 - c.B) * towardWhite));
+
+    /// <summary>
+    /// Reads the Windows taskbar theme. Only consulted for the static (not
+    /// lit) tray icon, so the silhouette stays readable on either taskbar.
+    /// </summary>
+    private static bool TaskbarIsLight()
+    {
+        try
+        {
+            using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+                @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+            return key?.GetValue("SystemUsesLightTheme") is int v && v != 0;
+        }
+        catch { return false; }
+    }
+
     public void Dispose()
     {
         if (_disposed) return;
@@ -733,6 +762,57 @@ internal sealed class TrayIcon : IDisposable
         ReleaseImages();
         _icon.Dispose();
         icon?.Dispose();
+    }
+}
+
+/// <summary>
+/// A plain menu row. When <see cref="Keycap"/> is set, the
+/// <see cref="ToolStripMenuItem.ShortcutKeyDisplayString"/> is painted as a
+/// keycap (rounded, 1px hairline) rather than letting the renderer draw it as
+/// bare text: the base paint runs first, then the keycap is drawn over the
+/// renderer's text, so layout and drop-down width are untouched.
+/// </summary>
+internal sealed class MenuRow : ToolStripMenuItem
+{
+    public MenuRow(string text, bool keycap) : base(text) { Keycap = keycap; }
+
+    public bool Keycap { get; }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        base.OnPaint(e);
+
+        var hint = ShortcutKeyDisplayString;
+        if (!Keycap || hint.Length == 0) return;
+
+        var g = e.Graphics;
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+
+        var area = e.ClipRectangle;
+        using var font = new GFont("Segoe UI Variable Display", 8.5f, GUnit.Point);
+        var textSize = g.MeasureString(hint, font);
+        const int padX = 7, padY = 3;
+        float kw = (float)Math.Ceiling(textSize.Width) + padX * 2;
+        float kh = textSize.Height + padY * 2;
+        float kx = area.Width - kw - 14;
+        float ky = area.Top + (area.Height - kh) / 2f;
+
+        using (var path = ToggleRow.RoundRect(
+                   new GRect((int)kx, (int)ky, (int)Math.Ceiling(kw), (int)Math.Ceiling(kh)), 4f))
+        {
+            using var fill = new GSolidBrush(TrayPalette.BgElevated);
+            g.FillPath(fill, path);
+            using var edge = new GPen(TrayPalette.Stroke);
+            g.DrawPath(edge, path);
+        }
+        using var brush = new GSolidBrush(TrayPalette.FgSecondary);
+        using var fmt = new StringFormat
+        {
+            Alignment = StringAlignment.Center,
+            LineAlignment = StringAlignment.Center,
+            FormatFlags = StringFormatFlags.NoWrap
+        };
+        g.DrawString(hint, font, brush, new RectangleF(kx, ky, kw, kh), fmt);
     }
 }
 
@@ -919,21 +999,27 @@ internal sealed class MenuHeaderStrip : System.Windows.Forms.Control
         using (var bg = new GSolidBrush(TrayPalette.BgCard))
             g.FillRectangle(bg, ClientRectangle);
 
-        // Logo tile
+        // Logo tile: warm paper, 1px hairline, rope-and-peg glyph.
         var logo = new GRect(LogoLeft, LogoTop, LogoSize, LogoSize);
         using (var path = ToggleRow.RoundRect(logo, 8f))
-        using (var grad = new System.Drawing.Drawing2D.LinearGradientBrush(
-                   new System.Drawing.Point(logo.Left, logo.Top),
-                   new System.Drawing.Point(logo.Right, logo.Bottom),
-                   GColor.FromArgb(91, 75, 214), GColor.FromArgb(62, 143, 216)))
-            g.FillPath(grad, path);
-
-        using (var glyphPen = new GPen(GColor.White, 1.8f) { StartCap = LineCap.Round, EndCap = LineCap.Round })
         {
-            g.DrawBezier(glyphPen,
-                new System.Drawing.Point(24, 29), new System.Drawing.Point(28, 36),
-                new System.Drawing.Point(38, 36), new System.Drawing.Point(42, 29));
-            g.DrawRectangle(glyphPen, 29, 32, 8, 7);
+            using var fill = new GSolidBrush(TrayPalette.BgSurface);
+            g.FillPath(fill, path);
+            using var edge = new GPen(TrayPalette.StrokeStrong);
+            g.DrawPath(edge, path);
+        }
+
+        using (var ropePen = new GPen(TrayPalette.Rope, 2.2f)
+               { StartCap = LineCap.Round, EndCap = LineCap.Round })
+        {
+            g.DrawBezier(ropePen,
+                new System.Drawing.Point(21, 27), new System.Drawing.Point(27, 34),
+                new System.Drawing.Point(39, 34), new System.Drawing.Point(45, 27));
+        }
+        using (var pegBrush = new GSolidBrush(TrayPalette.Peg))
+        using (var pinPath = ToggleRow.RoundRect(new GRect(30, 27, 6, 12), 2f))
+        {
+            g.FillPath(pegBrush, pinPath);
         }
 
         // Count badge, right aligned. Its width is measured BEFORE the title and
@@ -979,11 +1065,11 @@ internal sealed class MenuHeaderStrip : System.Windows.Forms.Control
         {
             using (var fill = new GSolidBrush(TrayPalette.AccentSoft))
                 g.FillPath(fill, path);
-            using (var edge = new GPen(GColor.FromArgb(90, 76, 194, 255)))
+            using (var edge = new GPen(TrayPalette.AccentRing))
                 g.DrawPath(edge, path);
         }
         using (var badgeFont = new GFont("Segoe UI Variable Display", 8.5f, GFontStyle.Bold))
-        using (var badgeBrush = new GSolidBrush(TrayPalette.Accent))
+        using (var badgeBrush = new GSolidBrush(TrayPalette.AccentText))
         using (var badgeFmt = new StringFormat
         {
             Alignment = StringAlignment.Center,
@@ -1094,7 +1180,7 @@ internal sealed class MenuThumbnailStrip : System.Windows.Forms.Control
                     g.SetClip(clip);
                     DrawCover(g, _thumbs[i], box);
                     g.Restore(saved);
-                    using var edge = new GPen(GColor.FromArgb(34, 255, 255, 255));
+                    using var edge = new GPen(TrayPalette.Stroke);
                     g.DrawPath(edge, clip);
                 }
             }
@@ -1141,9 +1227,9 @@ internal sealed class MenuThumbnailStrip : System.Windows.Forms.Control
 }
 
 /// <summary>
-/// Windows 11 dark theme palette. Hover is a subtle gray pill, the border is
-/// the same 1px hairline the WPF card menu draws, and selection uses the app
-/// accent (#4CC2FF).
+/// Linen light-theme palette for the drop-down chrome. Hover is a warm wash
+/// pill, the border is the same 1px hairline the WPF card menu draws, and
+/// selection accents use the app amber (#E9A23B).
 /// </summary>
 internal sealed class TrayColorTable : ProfessionalColorTable
 {
@@ -1151,9 +1237,8 @@ internal sealed class TrayColorTable : ProfessionalColorTable
     public override GColor MenuItemSelectedGradientBegin => TrayPalette.BgHover;
     public override GColor MenuItemSelectedGradientEnd => TrayPalette.BgHover;
     public override GColor MenuItemBorder => TrayPalette.Accent;
-    // Was #141414, which is invisible against a dark desktop and left the
-    // drop-down looking unbordered. The card menu's shell draws #3D3D3D, so
-    // both menus now have the same visible edge.
+    // A visible 1px hairline (#E2D7C7) so the drop-down reads against a light
+    // desktop; the WPF card menu's shell draws the same stroke.
     public override GColor MenuBorder => TrayPalette.Stroke;
     public override GColor ToolStripDropDownBackground => TrayPalette.BgCard;
     public override GColor ImageMarginGradientBegin => TrayPalette.BgCard;
